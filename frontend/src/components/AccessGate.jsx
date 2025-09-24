@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff } from 'lucide-react';
-import axios from 'axios';
-
-const API = "/api";
+import { restaurantApi } from '../services/api';
 
 const AccessGate = ({ onAccessGranted }) => {
   const [code, setCode] = useState('');
@@ -20,8 +18,8 @@ const AccessGate = ({ onAccessGranted }) => {
 
   const checkExistingSession = async (sessionId) => {
     try {
-      const response = await axios.get(`${API}/access/check/${sessionId}`);
-      if (response.data.hasAccess) {
+      const response = await restaurantApi.checkSession(sessionId);
+      if (response.hasAccess) {
         onAccessGranted();
       } else {
         localStorage.removeItem('restaurant_session');
@@ -43,15 +41,13 @@ const AccessGate = ({ onAccessGranted }) => {
     setError('');
 
     try {
-      const response = await axios.post(`${API}/access/verify`, {
-        code: code.trim()
-      });
+      const response = await restaurantApi.verifyAccess(code.trim());
 
-      if (response.data.success) {
-        localStorage.setItem('restaurant_session', response.data.session_id);
+      if (response.success) {
+        localStorage.setItem('restaurant_session', response.session_id);
         onAccessGranted();
       } else {
-        setError(response.data.message);
+        setError(response.message);
         setCode('');
       }
     } catch (error) {
